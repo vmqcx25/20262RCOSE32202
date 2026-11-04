@@ -2,7 +2,7 @@
 #include <pthread.h>
 
 #define N 100
-#define NUM_THREADS 2
+#define NUM_THREADS 3
 
 // 입력(배열, 구간)과 출력(부분합)을 함께 담는 구조체
 typedef struct __myarg_t {
@@ -38,7 +38,8 @@ int main(int argc, char *argv[]) {
         args[i].id = i;
         args[i].arr = arr;
         args[i].start = i * chunk;
-        args[i].end = (i + 1) * chunk;
+        // 마지막 스레드가 나머지(100 % 3)를 맡는다
+        args[i].end = (i == NUM_THREADS - 1) ? N : (i + 1) * chunk;
         args[i].sum = 0;
         rc = pthread_create(&p[i], NULL, mythread, &args[i]);
         if (rc != 0) {

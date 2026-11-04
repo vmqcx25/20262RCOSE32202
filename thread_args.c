@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <pthread.h>
 
+#define NUM_THREADS 3
+
 // Define a structure to pass multiple arguments to the thread
 typedef struct __myarg_t {
     int a;
@@ -16,21 +18,24 @@ void *mythread(void *arg) {
 }
 
 int main(int argc, char *argv[]) {
-    pthread_t p;    // Thread identifier
-    int rc;         // Return to check thread creation success
+    pthread_t p[NUM_THREADS];   // Thread identifiers
+    myarg_t args[NUM_THREADS];  // Arguments to pass to each thread
+    int rc;                     // Return to check thread creation success
 
-    myarg_t args;   // Arguments to pass to the thread
-    // Initialize the arguments
-    args.a = 10;
-    args.b = 20;
-    // Create a new thread, passing the arguments to the mythread function
-    rc = pthread_create(&p, NULL, mythread, &args);
-    if (rc != 0) {
-        fprintf(stderr, "pthread_create failed: %d\n", rc);
-        return 1;
+    for (int i = 0; i < NUM_THREADS; i++) {
+        // Initialize the arguments: (10,20), (30,40), (50,60)
+        args[i].a = 10 + i * 20;
+        args[i].b = 20 + i * 20;
+        // Create a new thread, passing its own arguments to mythread
+        rc = pthread_create(&p[i], NULL, mythread, &args[i]);
+        if (rc != 0) {
+            fprintf(stderr, "pthread_create failed: %d\n", rc);
+            return 1;
+        }
     }
 
-    // Wait for the thread to finish so its output is not lost
-    pthread_join(p, NULL);
+    // Wait for all threads to finish so their output is not lost
+    for (int i = 0; i < NUM_THREADS; i++)
+        pthread_join(p[i], NULL);
     return 0;
 }
