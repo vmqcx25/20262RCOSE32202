@@ -2,6 +2,8 @@
 #include <pthread.h>
 #include <stdlib.h>
 
+#define NUM_THREADS 3
+
 // Structure to pass multiple arguments to the thread function
 typedef struct __myarg_t {
     int a;
@@ -26,25 +28,28 @@ void *mythread(void *arg) {
 
 int main(int argc, char *argv[]) {
     int rc;
-    pthread_t p;
-    myret_t *m;
+    pthread_t p[NUM_THREADS];
+    myarg_t args[NUM_THREADS];
+    myret_t *m[NUM_THREADS];
 
-    myarg_t args;
-    args.a = 10;
-    args.b = 20;
-
-    // Create a new thread, pass the args to mythread function
-    rc = pthread_create(&p, NULL, mythread, &args);
-    if (rc != 0) {
-        fprintf(stderr, "pthread_create failed: %d\n", rc);
-        return 1;
+    for (int i = 0; i < NUM_THREADS; i++) {
+        // Arguments: (10,20), (30,40), (50,60)
+        args[i].a = 10 + i * 20;
+        args[i].b = 20 + i * 20;
+        // Create a new thread, pass its own args to mythread function
+        rc = pthread_create(&p[i], NULL, mythread, &args[i]);
+        if (rc != 0) {
+            fprintf(stderr, "pthread_create failed: %d\n", rc);
+            return 1;
+        }
     }
 
-    // Wait for the thread to terminate and retrieve its return value
-    pthread_join(p, (void **) &m);
-
-    // Print the values returned by the thread
-    printf("returned sum=%d prod=%d\n", m->sum, m->prod);
-    free(m);    // release memory allocated in the thread
+    for (int i = 0; i < NUM_THREADS; i++) {
+        // Wait for the thread to terminate and retrieve its return value
+        pthread_join(p[i], (void **) &m[i]);
+        // Print the values returned by the thread (always in thread order)
+        printf("returned [%d] sum=%d prod=%d\n", i, m[i]->sum, m[i]->prod);
+        free(m[i]);     // release memory allocated in the thread
+    }
     return 0;
 }
