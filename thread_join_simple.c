@@ -22,16 +22,20 @@ void *mythread(void *arg) {
 }
 
 int main(int argc, char *argv[]) {
-    pthread_t p;
-    myret_t *m;
-    myarg_t args;
-    args.a = 10;
-    args.b = 20;
+    pthread_t p[3];
+    myarg_t args[3];
+    myret_t *m[3];
 
-    pthread_create(&p, NULL, mythread, &args);
-    pthread_join(p, (void **) &m);
+    for (int i = 0; i < 3; i++) {
+        args[i].a = 10 + i * 20;
+        args[i].b = 20 + i * 20;
+        pthread_create(&p[i], NULL, mythread, &args[i]);
+    }
 
-    printf("returned %d %d\n", m->sum, m->prod);
-    free(m);
+    for (int i = 0; i < 3; i++) {
+        pthread_join(p[i], (void **) &m[i]);
+        printf("returned %d %d\n", m[i]->sum, m[i]->prod);
+        free(m[i]);
+    }
     return 0;
 }
